@@ -43,7 +43,6 @@ variable "signing_key_version" {
   type        = number
   description = "Version of the signing crypto key whose public key is registered on the attestor"
   default     = 1
-  sensitive   = true
 
   validation {
     condition     = var.signing_key_version >= 1 && floor(var.signing_key_version) == var.signing_key_version
@@ -51,9 +50,20 @@ variable "signing_key_version" {
   }
 }
 
+variable "additional_signing_key_versions" {
+  type        = list(number)
+  description = "Further versions of the signing crypto key whose public keys are also registered on the attestor, e.g. the previous version while a key rotation rolls out, so images attested with it are still admitted"
+  default     = []
+
+  validation {
+    condition     = alltrue([for v in var.additional_signing_key_versions : v >= 1 && floor(v) == v])
+    error_message = "var.additional_signing_key_versions entries must be positive whole numbers"
+  }
+}
+
 variable "attestation_signers" {
   type        = list(string)
-  description = "IAM members (e.g. the CI build service account) granted roles/containeranalysis.notes.attacher on the note so they can create attestations"
+  description = "IAM members (e.g. the CI build service account) that create attestations: granted roles/containeranalysis.notes.attacher on the note and roles/cloudkms.signerVerifier on the signing key. They also need roles/containeranalysis.occurrences.editor in the project the attestations are written to, which this module does not grant"
   default     = []
 
   validation {

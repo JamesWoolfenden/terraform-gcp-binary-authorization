@@ -1,0 +1,55 @@
+{
+  "scan_date": "2026-11-18T00:00:00Z",
+  "scan_path": ".",
+  "category": "all",
+  "findings": [
+    {
+      "id": "HOLDEN_AI_001",
+      "status": "fixed",
+      "first_seen": "2026-11-18",
+      "last_seen": "2026-11-18",
+      "unresolved_since": null,
+      "suppression_reason": null,
+      "principle": "reliability",
+      "severity": "MEDIUM",
+      "confidence": "high",
+      "title": "attestation_signers get notes.attacher but no permission to sign with the attestor's KMS key",
+      "file": "google_container_analysis_note_iam_member.attacher.tf",
+      "line": 1,
+      "resource": "google_container_analysis_note_iam_member.attacher",
+      "related_resources": [
+        "variable.attestation_signers",
+        "variable.signing_key_id",
+        "google_binary_authorization_attestor.main"
+      ],
+      "explanation": "The attestor only accepts attestations signed by the KMS key version registered on it, and the variable promises signers 'can create attestations', but the module grants them only roles/containeranalysis.notes.attacher. Without cloudkms signerVerifier on the key the CI identity cannot sign, so no image can be attested and the ENFORCED_BLOCK default rule blocks every deployment. Principle is a best fit: the policy works, the delivery pipeline it depends on cannot.",
+      "remediation": "Grant each attestation signer roles/cloudkms.signerVerifier on var.signing_key_id, and document the project-level roles/containeranalysis.occurrences.editor they also need.",
+      "fixable": true,
+      "fix": "resource \"google_kms_crypto_key_iam_member\" \"signer\" {\n  for_each      = toset(var.attestation_signers)\n  crypto_key_id = var.signing_key_id\n  role          = \"roles/cloudkms.signerVerifier\"\n  member        = each.value\n}"
+    },
+    {
+      "id": "HOLDEN_AI_002",
+      "status": "fixed",
+      "first_seen": "2026-11-18",
+      "last_seen": "2026-11-18",
+      "unresolved_since": null,
+      "suppression_reason": null,
+      "principle": "reliability",
+      "severity": "MEDIUM",
+      "confidence": "high",
+      "title": "Attestor trusts a single signing key version, so a key rotation instantly invalidates every existing attestation",
+      "file": "google_binary_authorization_attestor.main.tf",
+      "line": 1,
+      "resource": "google_binary_authorization_attestor.main",
+      "related_resources": [
+        "data.google_kms_crypto_key_version.signer",
+        "variable.signing_key_version"
+      ],
+      "explanation": "public_keys is built from one data.google_kms_crypto_key_version. The example's own comment says to rotate by adding a key version and registering it on the attestor, but changing signing_key_version replaces the only public key, so every running image attested with the old version is denied on its next reschedule until it is re-attested.",
+      "remediation": "Register a public key per trusted version: add var.additional_signing_key_versions and build public_keys with a dynamic block over a for_each data source.",
+      "fixable": false
+    }
+  ],
+  "suggested_policies": [],
+  "suggested_suppressions": []
+}

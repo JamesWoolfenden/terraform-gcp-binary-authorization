@@ -1,4 +1,7 @@
 locals {
+  # Every signing key version the attestor trusts, keyed by version number.
+  signing_key_versions = toset([for v in distinct(concat([var.signing_key_version], var.additional_signing_key_versions)) : tostring(v)])
+
   # The Binary Authorization service agent — the identity that reads
   # attestation occurrences from the Container Analysis note at admission time.
   binauthz_service_agent = "serviceAccount:service-${data.google_project.current.number}@gcp-sa-binaryauthorization.iam.gserviceaccount.com"

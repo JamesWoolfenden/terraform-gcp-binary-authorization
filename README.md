@@ -49,6 +49,7 @@ No modules.
 | [google_container_analysis_note.main](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/container_analysis_note) | resource |
 | [google_container_analysis_note_iam_member.attacher](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/container_analysis_note_iam_member) | resource |
 | [google_container_analysis_note_iam_member.binauthz](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/container_analysis_note_iam_member) | resource |
+| [google_kms_crypto_key_iam_member.signer](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/kms_crypto_key_iam_member) | resource |
 | [google_kms_crypto_key_version.signer](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/kms_crypto_key_version) | data source |
 | [google_project.current](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/project) | data source |
 
@@ -56,8 +57,9 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
+| <a name="input_additional_signing_key_versions"></a> [additional\_signing\_key\_versions](#input\_additional\_signing\_key\_versions) | Further versions of the signing crypto key whose public keys are also registered on the attestor, e.g. the previous version while a key rotation rolls out, so images attested with it are still admitted | `list(number)` | `[]` | no |
 | <a name="input_admission_whitelist_patterns"></a> [admission\_whitelist\_patterns](#input\_admission\_whitelist\_patterns) | Image name patterns exempt from the policy (e.g. "europe-west2-docker.pkg.dev/my-project/base/*"). Google-maintained system images are already exempted by global\_policy\_evaluation\_mode = ENABLE | `list(string)` | `[]` | no |
-| <a name="input_attestation_signers"></a> [attestation\_signers](#input\_attestation\_signers) | IAM members (e.g. the CI build service account) granted roles/containeranalysis.notes.attacher on the note so they can create attestations | `list(string)` | `[]` | no |
+| <a name="input_attestation_signers"></a> [attestation\_signers](#input\_attestation\_signers) | IAM members (e.g. the CI build service account) that create attestations: granted roles/containeranalysis.notes.attacher on the note and roles/cloudkms.signerVerifier on the signing key. They also need roles/containeranalysis.occurrences.editor in the project the attestations are written to, which this module does not grant | `list(string)` | `[]` | no |
 | <a name="input_attestor_display_name"></a> [attestor\_display\_name](#input\_attestor\_display\_name) | Human-readable name shown as the attestation authority hint on the note, e.g. "Build pipeline" | `string` | n/a | yes |
 | <a name="input_attestor_name"></a> [attestor\_name](#input\_attestor\_name) | Name of the Binary Authorization attestor; the Container Analysis note is named <attestor\_name>-note | `string` | n/a | yes |
 | <a name="input_cluster_admission_rules"></a> [cluster\_admission\_rules](#input\_cluster\_admission\_rules) | Optional per-cluster admission rules keyed by "location.cluster\_name" (e.g. "europe-west2.prod"). REQUIRE\_ATTESTATION rules require this module's attestor | <pre>map(object({<br/>    evaluation_mode  = optional(string, "REQUIRE_ATTESTATION")<br/>    enforcement_mode = optional(string, "ENFORCED_BLOCK_AND_AUDIT_LOG")<br/>  }))</pre> | `{}` | no |
@@ -95,6 +97,8 @@ resource "google_project_iam_custom_role" "terraform_pike" {
     "binaryauthorization.policy.get",
     "binaryauthorization.policy.update",
     "cloudkms.cryptoKeyVersions.get",
+    "cloudkms.cryptoKeys.getIamPolicy",
+    "cloudkms.cryptoKeys.setIamPolicy",
     "containeranalysis.notes.create",
     "containeranalysis.notes.delete",
     "containeranalysis.notes.get",
@@ -115,6 +119,7 @@ resource "google_project_iam_custom_role" "terraform_pike_plan" {
     "binaryauthorization.attestors.get",
     "binaryauthorization.policy.get",
     "cloudkms.cryptoKeyVersions.get",
+    "cloudkms.cryptoKeys.getIamPolicy",
     "containeranalysis.notes.get",
     "containeranalysis.notes.getIamPolicy",
     "resourcemanager.projects.get"
