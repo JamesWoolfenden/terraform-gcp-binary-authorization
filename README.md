@@ -46,9 +46,9 @@ No modules.
 | ---- | ---- |
 | [google_binary_authorization_attestor.main](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/binary_authorization_attestor) | resource |
 | [google_binary_authorization_policy.main](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/binary_authorization_policy) | resource |
+| [google_container_analysis_note.main](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/container_analysis_note) | resource |
 | [google_container_analysis_note_iam_member.attacher](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/container_analysis_note_iam_member) | resource |
 | [google_container_analysis_note_iam_member.binauthz](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/container_analysis_note_iam_member) | resource |
-| [google_container_analysis_note.main](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/container_analysis_note) | resource |
 | [google_kms_crypto_key_version.signer](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/kms_crypto_key_version) | data source |
 | [google_project.current](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/project) | data source |
 
@@ -60,7 +60,7 @@ No modules.
 | <a name="input_attestation_signers"></a> [attestation\_signers](#input\_attestation\_signers) | IAM members (e.g. the CI build service account) granted roles/containeranalysis.notes.attacher on the note so they can create attestations | `list(string)` | `[]` | no |
 | <a name="input_attestor_display_name"></a> [attestor\_display\_name](#input\_attestor\_display\_name) | Human-readable name shown as the attestation authority hint on the note, e.g. "Build pipeline" | `string` | n/a | yes |
 | <a name="input_attestor_name"></a> [attestor\_name](#input\_attestor\_name) | Name of the Binary Authorization attestor; the Container Analysis note is named <attestor\_name>-note | `string` | n/a | yes |
-| <a name="input_cluster_admission_rules"></a> [cluster\_admission\_rules](#input\_cluster\_admission\_rules) | Optional per-cluster admission rules keyed by "location.cluster\_name" (e.g. "europe-west2.prod"). REQUIRE\_ATTESTATION rules require this module's attestor | `map(object({ evaluation_mode = optional(string), enforcement_mode = optional(string) }))` | `{}` | no |
+| <a name="input_cluster_admission_rules"></a> [cluster\_admission\_rules](#input\_cluster\_admission\_rules) | Optional per-cluster admission rules keyed by "location.cluster\_name" (e.g. "europe-west2.prod"). REQUIRE\_ATTESTATION rules require this module's attestor | <pre>map(object({<br/>    evaluation_mode  = optional(string, "REQUIRE_ATTESTATION")<br/>    enforcement_mode = optional(string, "ENFORCED_BLOCK_AND_AUDIT_LOG")<br/>  }))</pre> | `{}` | no |
 | <a name="input_description"></a> [description](#input\_description) | Description applied to the attestor and the Binary Authorization policy | `string` | n/a | yes |
 | <a name="input_signing_key_id"></a> [signing\_key\_id](#input\_signing\_key\_id) | ID of the Cloud KMS ASYMMETRIC\_SIGN crypto key whose public key the attestor uses to verify attestations (projects/P/locations/L/keyRings/R/cryptoKeys/K) | `string` | n/a | yes |
 | <a name="input_signing_key_version"></a> [signing\_key\_version](#input\_signing\_key\_version) | Version of the signing crypto key whose public key is registered on the attestor | `number` | `1` | no |
